@@ -18,7 +18,7 @@ def repl(global: Map[String, Value]): Unit \ Console =
         case Some(line) =>
             match EvalError.runResult(() -> Eval.runForms(global, Reader.read(line))) {
                 case Ok((vals, newGlobal)) =>
-                    List.forEach(v -> Console.println(Value.show(v)), vals);
+                    List.forEach(v -> Console.println(RichString.toString(Value.format(v))), vals);
                     repl(newGlobal)
                 case Err(msg) =>
                     Console.println("error: ${msg}");
