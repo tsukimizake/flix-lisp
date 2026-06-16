@@ -83,4 +83,33 @@ mod TestLisp {
         Assert.assertEq(expected = true, isErr("("))
     }
 
+    ///
+    /// 末尾呼び出し最適化(TCO)の回帰テスト。
+    /// Flix の full Tail Call Elimination により、インタプリタの
+    /// `eval -> apply -> evalBody -> eval` チェーン(全て末尾位置)が
+    /// 自動的に最適化されている。これが壊れたらこのテストが落ちる。
+    ///
+    @Test
+    def testTailCallLoop(): Unit \ {Assert, IO} =
+        Assert.assertEq(
+            expected = "#t",
+            last("(define (loop n) (if (= n 0) #t (loop (- n 1)))) (loop 1000000)")
+        )
+
+    /// 末尾再帰でアキュムレータを使う形(末尾位置に関数呼び出し)。
+    @Test
+    def testTailCallSum(): Unit \ {Assert, IO} =
+        Assert.assertEq(
+            expected = "500000500000",
+            last("(define (sum n acc) (if (= n 0) acc (sum (- n 1) (+ n acc)))) (sum 1000000 0)")
+        )
+
+    /// 相互末尾再帰。Flix の full TCE は mutual tail call も最適化する。
+    @Test
+    def testTailCallMutual(): Unit \ {Assert, IO} =
+        Assert.assertEq(
+            expected = "#t",
+            last("(define (even? n) (if (= n 0) #t (odd? (- n 1)))) (define (odd? n) (if (= n 0) #f (even? (- n 1)))) (even? 1000000)")
+        )
+
 }
